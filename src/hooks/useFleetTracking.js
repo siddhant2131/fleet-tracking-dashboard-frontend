@@ -474,6 +474,146 @@
 //   };
 // };
 
+// import { useState, useEffect, useCallback, useRef } from 'react';
+// import { loadTripData, getEventsSince } from '../utils/eventProcessor';
+
+// const TRIP_FILES = [
+//   'trip_1_cross_country.json',
+//   'trip_2_urban_dense.json',
+//   'trip_3_mountain_cancelled.json',
+//   'trip_4_southern_technical.json',
+//   'trip_5_regional_logistics.json'
+// ];
+
+// export const useFleetTracking = () => {
+//   const [trips, setTrips] = useState([]);
+//   const [isPlaying, setIsPlaying] = useState(false);
+//   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+//   const [simulationTime, setSimulationTime] = useState(null);
+//   const [loading, setLoading] = useState(true);
+  
+//   const intervalRef = useRef(null);
+//   const startTimeRef = useRef(null);
+//   const rawTripsRef = useRef([]);
+
+//   useEffect(() => {
+//     const loadData = async () => {
+//       setLoading(true);
+//       try {
+//         const loadedTrips = await loadTripData(TRIP_FILES);
+        
+//         let earliestTime = null;
+//         loadedTrips.forEach(trip => {
+//           if (trip.events && trip.events.length > 0) {
+//             const tripStartTime = new Date(trip.events[0].timestamp);
+//             if (!earliestTime || tripStartTime < earliestTime) {
+//               earliestTime = tripStartTime;
+//             }
+//           }
+//         });
+
+//         startTimeRef.current = earliestTime;
+//         setSimulationTime(earliestTime);
+        
+//         const initializedTrips = loadedTrips.map(trip => ({
+//           ...trip,
+//           processedEvents: []
+//         }));
+        
+//         rawTripsRef.current = loadedTrips;
+//         setTrips(initializedTrips);
+//         setLoading(false);
+//       } catch (error) {
+//         console.error('Error loading fleet data:', error);
+//         setLoading(false);
+//       }
+//     };
+
+//     loadData();
+//   }, []);
+
+//   useEffect(() => {
+//     if (!isPlaying || !simulationTime || rawTripsRef.current.length === 0) {
+//       if (intervalRef.current) {
+//         clearInterval(intervalRef.current);
+//         intervalRef.current = null;
+//       }
+//       return;
+//     }
+
+//     const updateInterval = 300; // Increased interval for better performance
+//     const timeIncrement = playbackSpeed * 3000; // 3 seconds per update
+
+//     intervalRef.current = setInterval(() => {
+//       setSimulationTime(prevTime => {
+//         const newTime = new Date(prevTime.getTime() + timeIncrement);
+        
+//         const allTripsFinished = rawTripsRef.current.every(trip => {
+//           const lastEvent = trip.events[trip.events.length - 1];
+//           return new Date(lastEvent.timestamp) <= newTime;
+//         });
+
+//         if (allTripsFinished) {
+//           setIsPlaying(false);
+//         }
+
+//         return newTime;
+//       });
+//     }, updateInterval);
+
+//     return () => {
+//       if (intervalRef.current) {
+//         clearInterval(intervalRef.current);
+//       }
+//     };
+//   }, [isPlaying, playbackSpeed]);
+
+//   // Throttle the event processing
+//   useEffect(() => {
+//     if (!simulationTime || rawTripsRef.current.length === 0) return;
+
+//     const updateTrips = () => {
+//       setTrips(rawTripsRef.current.map(trip => ({
+//         ...trip,
+//         processedEvents: getEventsSince(trip.events, simulationTime)
+//       })));
+//     };
+
+//     // Use requestAnimationFrame for better performance
+//     const rafId = requestAnimationFrame(updateTrips);
+//     return () => cancelAnimationFrame(rafId);
+//   }, [simulationTime]);
+
+//   const togglePlayback = useCallback(() => {
+//     setIsPlaying(prev => !prev);
+//   }, []);
+
+//   const changeSpeed = useCallback((speed) => {
+//     setPlaybackSpeed(speed);
+//   }, []);
+
+//   const resetSimulation = useCallback(() => {
+//     setIsPlaying(false);
+//     setSimulationTime(startTimeRef.current);
+//     setTrips(rawTripsRef.current.map(trip => ({
+//       ...trip,
+//       processedEvents: []
+//     })));
+//   }, []);
+
+//   return {
+//     trips,
+//     isPlaying,
+//     playbackSpeed,
+//     simulationTime,
+//     loading,
+//     togglePlayback,
+//     changeSpeed,
+//     resetSimulation
+//   };
+// };
+
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { loadTripData, getEventsSince } from '../utils/eventProcessor';
 
@@ -566,7 +706,7 @@ export const useFleetTracking = () => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isPlaying, playbackSpeed]);
+  }, [isPlaying, playbackSpeed, simulationTime]); // Added simulationTime to dependencies
 
   // Throttle the event processing
   useEffect(() => {
